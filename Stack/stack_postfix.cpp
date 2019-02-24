@@ -1,73 +1,125 @@
-#include <bits/stdc++.h>
+
+// #include<iostream>
+// #include<stack>
+// #include<string>
+#include<bits/stdc++.h>
 using namespace std;
 
-int EvaluatePostfix(string expression);
-int PerformOperation(char operation, int operand1, int operand2);
-bool IsOperator(char C);
-bool IsNumericDigit(char C);
+
+
+bool Term(char c){
+    if(c >= '0' && c <= '9'){
+        return true;
+    }
+    if(c >= 'a' && c <= 'z'){
+        return true;
+    }
+    if(c >= 'A' && c <= 'Z'){
+        return true;
+    }
+    if(c == '.'){
+        return true;
+    }
+    // if(c == '^'){
+    //     return true;
+    // }
+    return false;
+}
+
+bool IsOperator(char c){
+    if(c == '+' || c == '-' || c == '*' || c == '/' || c == '^' ){
+        return true;
+    }
+    return false;
+}
+
+int IsRigthAssociative(char c){             //check it right associative or not
+    if(c == '^' ){
+        return false;
+    }
+    return true;
+
+}
+
+int GetOperatorWeight(char operators){               //for precedence lavel set
+    int weight = -1;
+    switch(operators){
+        case '+':
+        case '-':
+            weight=1;
+
+        case '*':
+        case '/':
+            weight=2;
+
+        case '^':
+            weight=3;
+
+    }
+    return weight;
+}
+
+
+int HasHigherPrecedence(char operatorOne, char operatorTwo){
+    int operatorOneWeight = GetOperatorWeight(operatorOne);
+    int operatorTwoWeight = GetOperatorWeight(operatorTwo);
+
+    // if equal precedence return true if they left associative.return false if they right associative. if left associative then left one give priority
+    if(operatorOneWeight == operatorTwoWeight){
+        if(IsRigthAssociative(operatorOne) ){
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+    else if(operatorOneWeight > operatorTwoWeight){
+        return true;
+    }
+    return false;
+}
+
+string Postfix(string expression){              //solve postfix expression
+
+    stack<char> Stack;
+    string postfix="";                          //initial as a empty
+    for(int i=0;i<expression.length();i++){
+        if(expression[i] ==' ' || expression[i] == ','){                //if delimeter then move next
+            continue;
+        }
+        else if(IsOperator(expression[i])){
+            while(!Stack.empty() && Stack.top() != '(' && HasHigherPrecedence(Stack.top(), expression[i])){
+                postfix = postfix+Stack.top();
+                Stack.pop();
+            }
+            Stack.push(expression[i]);
+        }
+        else if(Term(expression[i])){               //if the char is an operand or term
+            postfix = postfix+expression[i];
+        }
+        else if(expression[i] == '('){
+            Stack.push(expression[i]);
+        }
+        else if(expression[i] == ')'){
+            while(!Stack.empty() && Stack.top() != '('){
+                postfix = postfix+Stack.top();
+                Stack.pop();
+            }
+            Stack.pop();
+        }
+    }
+    while(!Stack.empty()){
+        postfix = postfix+Stack.top();
+        Stack.pop();
+    }
+    return postfix;
+}
+
 
 int main()
 {
-	string expression;
-	cout<<"Enter Postfix Expression \n";
-	getline(cin,expression);
-	int result = EvaluatePostfix(expression);
-	cout<<"Output = "<<result<<"\n";
-}
-
-int EvaluatePostfix(string expression){ // evaluate Postfix expression and return output
-
-	stack<int> S;// Declaring a Stack
-
-	for(int i = 0;i< expression.length();i++){
-
-		// Scanning each character from left.
-		// If character is a delimitter, move on.
-		if(expression[i] == ' ' || expression[i] == ',') continue;
-
-		// If character is operator, pop two elements from stack, perform operation and push the result back.
-		else if(IsOperator(expression[i])){
-			// Pop two operands.
-			int operand2 = S.top(); S.pop();
-			int operand1 = S.top(); S.pop();
-			// Perform operation
-			int result = PerformOperation(expression[i], operand1, operand2);
-			//Push back result of operation on stack.
-			S.push(result);
-		}
-		else if(IsNumericDigit(expression[i])){
-			int operand = 0;
-			while(i<expression.length() && IsNumericDigit(expression[i])){
-				operand = (operand*10) + (expression[i] - '0');
-				i++;
-			}
-			i--;
-
-			// Push operand on stack.
-			S.push(operand);
-		}
-	}
-	return S.top();
-}
-
-bool IsNumericDigit(char C){//verify whether a character is numeric digit.
-	if(C >= '0' && C <= '9') return true;
-	return false;
-}
-
-bool IsOperator(char C){// verify whether a character is operator symbol or not
-	if(C == '+' || C == '-' || C == '*' || C == '/')
-		return true;
-
-	return false;
-}
-
-int PerformOperation(char operation, int operand1, int operand2){// perform an operation and return output
-	if(operation == '+') return operand1 +operand2;
-	else if(operation == '-') return operand1 - operand2;
-	else if(operation == '*') return operand1 * operand2;
-	else if(operation == '/') return operand1 / operand2;
-
-	else cout<<"Unexpected Error \n";
-	return -1;
+    string expression;
+    cout<<"enter expression in enfix order: ";
+    getline(cin,expression);
+    cout<<"Postfix : "<<Postfix(expression);
 }
